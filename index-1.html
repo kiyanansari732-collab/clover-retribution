@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>☘ Clover Retribution 3D</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --gold:    #c9a84c;
+    --gold2:   #ffe08a;
+    --dark:    #0a0c10;
+    --panel:   rgba(8,10,16,0.92);
+    --green:   #2ecc71;
+    --red:     #e74c3c;
+    --blue:    #5dade2;
+    --purple:  #a569bd;
+    --border:  rgba(201,168,76,0.35);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--dark);
+    font-family: 'Cinzel', serif;
+    color: #e8d5a3;
+    overflow: hidden;
+    height: 100vh; width: 100vw;
+  }
+  #canvas-bg { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
+
+  /* ── SCREENS ── */
+  .screen {
+    position: fixed; inset: 0; z-index: 10;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: rgba(5,7,12,0.88);
+    backdrop-filter: blur(2px);
+    transition: opacity 0.5s;
+  }
+  .screen.hidden { opacity:0; pointer-events:none; }
+
+  /* ── TITLE SCREEN ── */
+  #title-screen { gap: 0; }
+  .title-emblem {
+    font-size: clamp(60px,12vw,120px);
+    line-height: 1;
+    filter: drop-shadow(0 0 30px #2ecc71aa);
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+  .title-main {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(22px, 5vw, 52px);
+    font-weight: 900;
+    color: var(--gold);
+    text-shadow: 0 0 40px rgba(201,168,76,0.7), 0 2px 0 #000;
+    letter-spacing: 4px;
+    margin-top: 8px;
+  }
+  .title-sub {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: clamp(12px, 2vw, 18px);
+    color: #a0896a;
+    letter-spacing: 6px;
+    margin: 10px 0 40px;
+  }
+  .btn-main {
+    background: linear-gradient(135deg, #1a1200, #3a2800);
+    border: 1px solid var(--gold);
+    color: var(--gold2);
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    letter-spacing: 3px;
+    padding: 14px 40px;
+    cursor: pointer;
+    clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .btn-main:hover {
+    background: linear-gradient(135deg, #3a2800, #5a3e00);
+    box-shadow: 0 0 20px rgba(201,168,76,0.4);
+    transform: scale(1.04);
+  }
+
+  /* ── CHARACTER CREATION ── */
+  #create-screen { gap: 0; padding: 0; overflow-y: auto; justify-content: flex-start; }
+  .create-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 20px 16px;
+    width: 100%;
+    max-width: 600px;
+    min-height: 100vh;
+    overflow-y: auto;
+    margin: 0 auto;
+  }
+  .create-panel h2 {
+    font-family: 'Cinzel Decorative', serif;
+    color: var(--gold);
+    font-size: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+    letter-spacing: 3px;
+  }
+  .form-group { margin-bottom: 18px; }
+  .form-group label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: #a0896a;
+    margin-bottom: 7px;
+    text-transform: uppercase;
+  }
+  .form-group input[type=text] {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    color: var(--gold2);
+    font-family: 'Cinzel', serif;
+    font-size: 15px;
+    padding: 10px 14px;
+    outline: none;
+  }
+  .form-group input[type=text]:focus { border-color: var(--gold); }
+  .options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+  }
+  .opt-btn {
+    background: rgba(255,255,255,0.05);
+    border: 2px solid rgba(201,168,76,0.3);
+    color: #c8b87a;
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    padding: 12px 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    letter-spacing: 1px;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    min-height: 48px;
+  }
+  .opt-btn:active, .opt-btn.selected {
+    background: rgba(201,168,76,0.2);
+    border-color: var(--gold);
+    color: var(--gold2);
+    box-shadow: 0 0 12px rgba(201,168,76,0.35);
+  }
+  .opt-btn .opt-rarity {
+    display: block;
+    font-size: 9px;
+    margin-top: 4px;
+    letter-spacing: 2px;
+  }
+  .rarity-Common    { color: #aaa; }
+  .rarity-Uncommon  { color: #2ecc71; }
+  .rarity-Rare      { color: #5dade2; }
+  .rarity-Epic      { color: #a569bd; }
+  .rarity-Legendary { color: var(--gold); }
+  .rarity-Mythic    { color: #e74c3c; }
+
+  /* ── GAME HUD ── */
+  #game-screen { background: transparent; justify-content: flex-end; align-items: stretch; pointer-events: none; }
+  #game-screen.hidden { display:none; }
+  .hud-top {
+    position: fixed; top: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 14px 18px; pointer-events: none; z-index: 20;
+  }
+  .hud-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    min-width: 180px;
+    pointer-events: all;
+  }
+  .hud-name {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 13px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .stat-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; font-size:11px; color:#a0896a; }
+  .bar-wrap { flex:1; height:7px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; }
+  .bar-fill  { height:100%; border-radius:2px; transition: width 0.4s; }
+  .bar-hp    { background: linear-gradient(90deg, #c0392b, #e74c3c); }
+  .bar-mana  { background: linear-gradient(90deg, #1a5276, #5dade2); }
+  .stat-val  { font-size:10px; color:#c8b87a; min-width:50px; text-align:right; }
+
+  .hud-magic {
+    font-size: 11px; letter-spacing: 2px; margin-top: 8px;
+    text-transform: uppercase;
+  }
+
+  /* ── ACTION BAR ── */
+  .action-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    display: flex; justify-content: center; align-items: flex-end;
+    gap: 10px; padding: 16px; pointer-events: none; z-index: 20;
+  }
+  .action-btn {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--gold2);
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    padding: 12px 22px;
+    cursor: pointer;
+    pointer-events: all;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .action-btn:hover {
+    background: rgba(201,168,76,0.15);
+    border-color: var(--gold);
+    box-shadow: 0 0 16px rgba(201,168,76,0.25);
+  }
+  .action-btn.red   { border-color: rgba(231,76,60,0.5); color: #e98a81; }
+  .action-btn.blue  { border-color: rgba(93,173,226,0.5); color: #9dd4f0; }
+  .action-btn.green { border-color: rgba(46,204,113,0.5); color: #82e0aa; }
+
+  /* ── COMBAT PANEL ── */
+  #combat-overlay {
+    position: fixed; inset: 0; z-index: 30;
+    background: rgba(0,0,0,0.75);
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  #combat-overlay.hidden { display:none; }
+  .combat-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 28px;
+    width: min(520px, 96vw);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .combat-header {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 16px;
+    color: var(--gold);
+    text-align: center;
+    letter-spacing: 3px;
+    margin-bottom: 20px;
+  }
+  .combatant-row {
+    display: flex; gap: 16px; margin-bottom: 18px;
+  }
+  .combatant-box { flex:1; }
+  .combatant-name { font-size:12px; letter-spacing:2px; margin-bottom:6px; color:#c8b87a; }
+  .combat-log {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(201,168,76,0.15);
+    padding: 12px;
+    font-family: 'IM Fell English', serif;
+    font-size: 13px;
+    line-height: 1.7;
+    max-height: 140px;
+    overflow-y: auto;
+    margin-bottom: 16px;
+    color: #c8b87a;
+  }
+  .combat-log p { margin-bottom: 4px; }
+  .log-player { color: #82e0aa; }
+  .log-enemy  { color: #e98a81; }
+  .log-system { color: var(--gold); font-style: italic; }
+  .spell-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px; margin-bottom: 14px;
+  }
+  .spell-btn {
+    background: rgba(201,168,76,0.06);
+    border: 1px solid rgba(201,168,76,0.25);
+    color: #c8b87a;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 9px 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .spell-btn:hover {
+    background: rgba(201,168,76,0.14);
+    border-color: var(--gold);
+    color: var(--gold2);
+  }
+  .combat-actions { display:flex; gap:8px; justify-content:center; }
+
+  /* ── MODAL / SPIN ── */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 40;
+    background: rgba(0,0,0,0.8);
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(6px);
+  }
+  .modal-overlay.hidden { display:none; }
+  .modal-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 30px;
+    width: min(440px, 96vw);
+    text-align: center;
+  }
+  .modal-box h3 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 18px;
+    color: var(--gold);
+    margin-bottom: 16px;
+    letter-spacing: 3px;
+  }
+  .spin-result {
+    font-size: 28px;
+    font-family: 'Cinzel Decorative', serif;
+    color: var(--gold2);
+    margin: 20px 0;
+    min-height: 44px;
+    text-shadow: 0 0 30px rgba(201,168,76,0.6);
+  }
+  .modal-actions { display:flex; gap:10px; justify-content:center; margin-top:16px; }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+    background: rgba(8,10,16,0.95);
+    border: 1px solid var(--gold);
+    color: var(--gold2);
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    padding: 12px 28px;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+  }
+  #toast.show { opacity: 1; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<canvas id="canvas-bg"></canvas>
+
+<!-- ══════════ TITLE SCREEN ══════════ -->
+<div id="title-screen" class="screen">
+  <div class="title-emblem">☘</div>
+  <div class="title-main">CLOVER RETRIBUTION</div>
+  <div class="title-sub">Rise. Spin. Conquer.</div>
+  <button class="btn-main" onclick="showCreate()">Begin Your Journey</button>
+</div>
+
+<!-- ══════════ CHARACTER CREATION ══════════ -->
+<div id="create-screen" class="screen hidden">
+  <div class="create-panel">
+    <h2>☘ Character Creation</h2>
+
+    <div class="form-group">
+      <label>Your Name</label>
+      <input type="text" id="char-name" placeholder="Enter your name..." maxlength="20"/>
+    </div>
+
+    <div class="form-group">
+      <label>Race</label>
+      <div class="options-grid" id="race-options"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Magic Affinity</label>
+      <div class="options-grid" id="magic-options"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Trait</label>
+      <div class="options-grid" id="trait-options"></div>
+    </div>
+
+    <div style="text-align:center;margin-top:8px;">
+      <button class="btn-main" onclick="startGame()">Receive Grimoire →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ GAME HUD ══════════ -->
+<div id="game-screen" class="screen hidden">
+  <div class="hud-top">
+    <!-- Player Card -->
+    <div class="hud-card">
+      <div class="hud-name" id="hud-name">—</div>
+      <div class="stat-row">
+        <span>HP</span>
+        <div class="bar-wrap"><div class="bar-fill bar-hp" id="bar-hp"></div></div>
+        <span class="stat-val" id="val-hp">—</span>
+      </div>
+      <div class="stat-row">
+        <span>MP</span>
+        <div class="bar-wrap"><div class="bar-fill bar-mana" id="bar-mana"></div></div>
+        <span class="stat-val" id="val-mana">—</span>
+      </div>
+      <div class="hud-magic" id="hud-magic">—</div>
+    </div>
+
+    <!-- Stats Card -->
+    <div class="hud-card" style="text-align:right;min-width:160px;">
+      <div style="font-size:11px;letter-spacing:2px;color:#a0896a;margin-bottom:8px;">STATUS</div>
+      <div style="font-size:12px;margin-bottom:4px;">Lv. <span id="hud-level" style="color:var(--gold)">1</span></div>
+      <div style="font-size:11px;color:#888;margin-bottom:3px;">XP: <span id="hud-xp" style="color:#c8b87a">0/100</span></div>
+      <div style="font-size:11px;color:#888;margin-bottom:3px;">Gold: <span id="hud-gold" style="color:var(--gold)">0</span></div>
+      <div style="font-size:11px;color:#888;">Grimoire: <span id="hud-grimoire" style="color:#a569bd">—</span></div>
+    </div>
+  </div>
+
+  <!-- Action Bar -->
+  <div class="action-bar">
+    <button class="action-btn red"   onclick="openQuestMenu()">⚔ Quests</button>
+    <button class="action-btn blue"  onclick="openSpinMenu()">🎲 Spin</button>
+    <button class="action-btn green" onclick="restPlayer()">🌿 Rest</button>
+    <button class="action-btn"      onclick="openSpellsModal()">✨ Spells</button>
+  </div>
+</div>
+
+<!-- ══════════ COMBAT OVERLAY ══════════ -->
+<div id="combat-overlay" class="hidden">
+  <div class="combat-panel">
+    <div class="combat-header" id="combat-title">⚔ BATTLE</div>
+    <div class="combatant-row">
+      <div class="combatant-box">
+        <div class="combatant-name" id="c-pname">Player</div>
+        <div class="stat-row"><span>HP</span><div class="bar-wrap"><div class="bar-fill bar-hp" id="c-php"></div></div><span class="stat-val" id="c-php-val">—</span></div>
+        <div class="stat-row"><span>MP</span><div class="bar-wrap"><div class="bar-fill bar-mana" id="c-pmana"></div></div><span class="stat-val" id="c-pmana-val">—</span></div>
+      </div>
+      <div style="display:flex;align-items:center;font-size:22px;color:var(--gold);padding:0 4px;">⚡</div>
+      <div class="combatant-box">
+        <div class="combatant-name" id="c-ename">Enemy</div>
+        <div class="stat-row"><span>HP</span><div class="bar-wrap"><div class="bar-fill bar-hp" id="c-ehp"></div></div><span class="stat-val" id="c-ehp-val">—</span></div>
+      </div>
+    </div>
+
+    <div class="combat-log" id="combat-log"></div>
+
+    <div style="font-size:11px;letter-spacing:2px;color:#a0896a;margin-bottom:8px;">CAST A SPELL</div>
+    <div class="spell-grid" id="spell-grid"></div>
+
+    <div class="combat-actions">
+      <button class="action-btn" onclick="combatAction('basic')">Basic Attack</button>
+      <button class="action-btn red" onclick="combatAction('flee')">Flee</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ QUEST MODAL ══════════ -->
+<div id="quest-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h3>⚔ QUESTS</h3>
+    <div id="quest-list"></div>
+    <div class="modal-actions">
+      <button class="btn-main" onclick="closeModal('quest-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SPIN MODAL ══════════ -->
+<div id="spin-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h3>🎲 SPIN</h3>
+    <div style="font-size:12px;color:#a0896a;margin-bottom:14px;">
+      Magic: <span id="s-magic-count" style="color:var(--gold)">3</span> &nbsp;|&nbsp;
+      Race: <span id="s-race-count" style="color:var(--gold)">3</span> &nbsp;|&nbsp;
+      Trait: <span id="s-trait-count" style="color:var(--gold)">3</span>
+    </div>
+    <div class="spin-result" id="spin-result">—</div>
+    <div class="modal-actions">
+      <button class="action-btn blue" onclick="doSpin('magic')">Spin Magic</button>
+      <button class="action-btn" onclick="doSpin('race')">Spin Race</button>
+      <button class="action-btn green" onclick="doSpin('trait')">Spin Trait</button>
+    </div>
+    <div id="spin-keep-row" class="modal-actions" style="margin-top:10px;display:none;">
+      <button class="action-btn green" onclick="keepSpin()">Keep</button>
+      <button class="action-btn red" onclick="discardSpin()">Discard</button>
+    </div>
+    <div class="modal-actions" style="margin-top:12px;">
+      <button class="btn-main" onclick="closeModal('spin-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SPELLS MODAL ══════════ -->
+<div id="spells-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h3>✨ SPELLBOOK</h3>
+    <div id="spells-list" style="font-family:'IM Fell English',serif;font-size:14px;line-height:2;color:#c8b87a;"></div>
+    <div class="modal-actions" style="margin-top:16px;">
+      <button class="btn-main" onclick="closeModal('spells-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ TOAST ══════════ -->
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ══════════════════════════════════════════
+//  THREE.JS 3D BACKGROUND
+// ══════════════════════════════════════════
+const canvas = document.getElementById('canvas-bg');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x060910, 1);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(0, 0, 30);
+
+// Fog
+scene.fog = new THREE.FogExp2(0x060910, 0.025);
+
+// Ambient
+scene.add(new THREE.AmbientLight(0x1a2a40, 1.2));
+const dirLight = new THREE.DirectionalLight(0x4fc3f7, 1.5);
+dirLight.position.set(5, 10, 8);
+scene.add(dirLight);
+const greenLight = new THREE.PointLight(0x2ecc71, 2, 40);
+greenLight.position.set(-10, 5, 0);
+scene.add(greenLight);
+const goldLight = new THREE.PointLight(0xc9a84c, 1.5, 30);
+goldLight.position.set(10, -5, 5);
+scene.add(goldLight);
+
+// Particles (magic dust)
+const particleGeo = new THREE.BufferGeometry();
+const pCount = 2000;
+const pPos = new Float32Array(pCount * 3);
+const pSizes = new Float32Array(pCount);
+for (let i = 0; i < pCount; i++) {
+  pPos[i*3]   = (Math.random() - 0.5) * 80;
+  pPos[i*3+1] = (Math.random() - 0.5) * 80;
+  pPos[i*3+2] = (Math.random() - 0.5) * 80;
+  pSizes[i]   = Math.random() * 1.5 + 0.3;
+}
+particleGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+particleGeo.setAttribute('size', new THREE.BufferAttribute(pSizes, 1));
+const particleMat = new THREE.PointsMaterial({
+  color: 0x2ecc71, size: 0.25, transparent: true,
+  opacity: 0.55, sizeAttenuation: true
+});
+scene.add(new THREE.Points(particleGeo, particleMat));
+
+// Gold particles
+const geoGold = new THREE.BufferGeometry();
+const gPos = new Float32Array(800 * 3);
+for (let i = 0; i < 800; i++) {
+  gPos[i*3]   = (Math.random() - 0.5) * 60;
+  gPos[i*3+1] = (Math.random() - 0.5) * 60;
+  gPos[i*3+2] = (Math.random() - 0.5) * 60;
+}
+geoGold.setAttribute('position', new THREE.BufferAttribute(gPos, 3));
+scene.add(new THREE.Points(geoGold, new THREE.PointsMaterial({ color: 0xc9a84c, size: 0.18, transparent: true, opacity: 0.4 })));
+
+// Floating clover meshes
+const cloverGroup = new THREE.Group();
+scene.add(cloverGroup);
+function makeCrystal(x, y, z, color, scale) {
+  const geo = new THREE.OctahedronGeometry(1 * scale, 0);
+  const mat = new THREE.MeshPhongMaterial({ color, transparent: true, opacity: 0.35, wireframe: false });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(x, y, z);
+  const wmat = new THREE.MeshBasicMaterial({ color, wireframe: true, transparent: true, opacity: 0.25 });
+  const wmesh = new THREE.Mesh(geo.clone(), wmat);
+  wmesh.position.set(x, y, z);
+  cloverGroup.add(mesh, wmesh);
+  return mesh;
+}
+const crystals = [];
+const crystalColors = [0x2ecc71, 0xc9a84c, 0xa569bd, 0x5dade2, 0xe74c3c];
+for (let i = 0; i < 14; i++) {
+  crystals.push(makeCrystal(
+    (Math.random()-0.5)*40, (Math.random()-0.5)*30, (Math.random()-0.5)*20 - 10,
+    crystalColors[i % crystalColors.length], Math.random()*1.2+0.5
+  ));
+}
+
+// Ground grid
+const gridHelper = new THREE.GridHelper(80, 30, 0x1a2a20, 0x0d1a10);
+gridHelper.position.y = -15;
+scene.add(gridHelper);
+
+// Player character (3D mesh)
+const charGroup = new THREE.Group();
+scene.add(charGroup);
+charGroup.position.set(0, -4, 5);
+
+// Body
+const bodyGeo = new THREE.CylinderGeometry(0.6, 0.8, 2.2, 8);
+const bodyMat = new THREE.MeshPhongMaterial({ color: 0x1a3a5c });
+charGroup.add(Object.assign(new THREE.Mesh(bodyGeo, bodyMat), { position: new THREE.Vector3(0, 0, 0) }));
+
+// Head
+const headGeo = new THREE.SphereGeometry(0.7, 12, 10);
+const headMat = new THREE.MeshPhongMaterial({ color: 0xf0c88a });
+const head = new THREE.Mesh(headGeo, headMat);
+head.position.set(0, 1.8, 0);
+charGroup.add(head);
+
+// Cape
+const capeGeo = new THREE.ConeGeometry(1.1, 2.5, 6);
+const capeMat = new THREE.MeshPhongMaterial({ color: 0x0d2b0d, side: THREE.DoubleSide });
+const cape = new THREE.Mesh(capeGeo, capeMat);
+cape.position.set(0, 0, -0.5);
+cape.rotation.x = 0.3;
+charGroup.add(cape);
+
+// Grimoire glow orb
+const orbGeo = new THREE.SphereGeometry(0.4, 12, 10);
+const orbMat = new THREE.MeshPhongMaterial({ color: 0x2ecc71, emissive: 0x2ecc71, emissiveIntensity: 0.8, transparent: true, opacity: 0.85 });
+const orb = new THREE.Mesh(orbGeo, orbMat);
+orb.position.set(1.2, -0.3, 0.4);
+charGroup.add(orb);
+
+// Orb light
+const orbLight = new THREE.PointLight(0x2ecc71, 1.5, 6);
+orbLight.position.copy(orb.position);
+charGroup.add(orbLight);
+
+// Enemy (hidden by default)
+const enemyGroup = new THREE.Group();
+scene.add(enemyGroup);
+enemyGroup.position.set(0, -4, 5);
+enemyGroup.visible = false;
+
+const eBodyGeo = new THREE.CylinderGeometry(0.9, 1.1, 2.8, 6);
+const eBodyMat = new THREE.MeshPhongMaterial({ color: 0x4a0000 });
+enemyGroup.add(Object.assign(new THREE.Mesh(eBodyGeo, eBodyMat)));
+const eHeadGeo = new THREE.SphereGeometry(0.9, 10, 8);
+const eHeadMat = new THREE.MeshPhongMaterial({ color: 0x8b0000 });
+const eHead = new THREE.Mesh(eHeadGeo, eHeadMat);
+eHead.position.y = 2.2;
+enemyGroup.add(eHead);
+const hornGeo = new THREE.ConeGeometry(0.2, 0.8, 6);
+const hornMat = new THREE.MeshPhongMaterial({ color: 0x2d0000 });
+[-0.45, 0.45].forEach(x => {
+  const h = new THREE.Mesh(hornGeo, hornMat);
+  h.position.set(x, 3.0, 0); h.rotation.z = x > 0 ? -0.4 : 0.4;
+  enemyGroup.add(h);
+});
+
+// Attack effect particles
+const attackParticles = [];
+function spawnAttackFX(color) {
+  for (let i = 0; i < 20; i++) {
+    const geo = new THREE.SphereGeometry(0.12, 6, 6);
+    const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9 });
+    const p = new THREE.Mesh(geo, mat);
+    p.position.set((Math.random()-0.5)*3, (Math.random()-0.5)*3+(-4), 5+(Math.random()-0.5)*3);
+    p.userData.vel = new THREE.Vector3((Math.random()-0.5)*0.18, (Math.random()-0.5)*0.18, (Math.random()-0.5)*0.1);
+    p.userData.life = 1.0;
+    scene.add(p);
+    attackParticles.push(p);
+  }
+}
+
+let time = 0;
+function animate() {
+  requestAnimationFrame(animate);
+  time += 0.01;
+
+  // Bob particles
+  const pos = particleGeo.attributes.position.array;
+  for (let i = 1; i < pCount * 3; i += 3) pos[i] += Math.sin(time + i) * 0.002;
+  particleGeo.attributes.position.needsUpdate = true;
+
+  // Rotate crystals
+  crystals.forEach((c, i) => {
+    c.rotation.x += 0.004 + i * 0.001;
+    c.rotation.y += 0.006 + i * 0.0005;
+    c.position.y += Math.sin(time * 0.8 + i) * 0.005;
+  });
+
+  // Animate player
+  charGroup.rotation.y = Math.sin(time * 0.5) * 0.2;
+  charGroup.position.y = -4 + Math.sin(time * 1.2) * 0.15;
+  orb.material.emissiveIntensity = 0.6 + Math.sin(time * 2) * 0.4;
+  orbLight.intensity = 1.2 + Math.sin(time * 2) * 0.5;
+
+  // Animate enemy
+  if (enemyGroup.visible) {
+    enemyGroup.rotation.y = Math.PI + Math.sin(time * 0.7) * 0.25;
+    enemyGroup.position.y = -4 + Math.sin(time * 1.5 + 1) * 0.12;
+  }
+
+  // Attack FX
+  for (let i = attackParticles.length - 1; i >= 0; i--) {
+    const p = attackParticles[i];
+    p.position.add(p.userData.vel);
+    p.userData.life -= 0.035;
+    p.material.opacity = p.userData.life;
+    if (p.userData.life <= 0) { scene.remove(p); attackParticles.splice(i, 1); }
+  }
+
+  // Lights drift
+  greenLight.position.x = Math.sin(time * 0.3) * 12;
+  goldLight.position.x  = Math.cos(time * 0.4) * 12;
+
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+
+// ══════════════════════════════════════════
+//  GAME DATA
+// ══════════════════════════════════════════
+const RACES = {
+  Human:   { rarity:'Common',    hp:0,  mana:0,  w:50 },
+  Elf:     { rarity:'Uncommon',  hp:10, mana:20, w:25 },
+  Dwarf:   { rarity:'Rare',      hp:30, mana:5,  w:15 },
+  Demon:   { rarity:'Epic',      hp:50, mana:10, w:7  },
+  Arcane:  { rarity:'Legendary', hp:40, mana:40, w:2  },
+  Devil:   { rarity:'Mythic',    hp:80, mana:60, w:1  },
+};
+const MAGIC_TYPES = {
+  Fire:      { dmg:1.3, mana:20, color:'#e74c3c', fxColor:0xe74c3c },
+  Water:     { dmg:1.1, mana:15, color:'#5dade2', fxColor:0x5dade2 },
+  Wind:      { dmg:1.2, mana:18, color:'#a9cce3', fxColor:0xa9cce3 },
+  Earth:     { dmg:1.0, mana:10, color:'#b7950b', fxColor:0xb7950b },
+  Lightning: { dmg:1.5, mana:30, color:'#f9e30a', fxColor:0xf9e30a },
+  Ice:       { dmg:1.2, mana:20, color:'#d6eaf8', fxColor:0xd6eaf8 },
+  Dark:      { dmg:1.6, mana:35, color:'#a569bd', fxColor:0xa569bd },
+  Light:     { dmg:1.4, mana:28, color:'#ffe08a', fxColor:0xffe08a },
+  Arcane:    { dmg:1.8, mana:45, color:'#e8daef', fxColor:0xe8daef },
+  None:      { dmg:0.5, mana:0,  color:'#888',    fxColor:0x888888 },
+};
+const TRAITS = {
+  Berserker: { hp:1.2, dmg:1.3, mana:0.8 },
+  Sage:      { hp:0.9, dmg:1.0, mana:1.5 },
+  Knight:    { hp:1.3, dmg:1.1, mana:0.9 },
+  Assassin:  { hp:0.8, dmg:1.5, mana:1.0 },
+  Balanced:  { hp:1.0, dmg:1.0, mana:1.0 },
+};
+const SPELLS = {
+  Fire:      ['Fireball','Fire Pillar','Exploding Fireball','Flame Slash','Inferno Burst'],
+  Water:     ['Water Slash','Aqua Bullet','Tidal Wave','Water Prison','Tsunami'],
+  Wind:      ['Wind Cutter','Gale Slash','Cyclone Kick','Storm Blade','Tempest'],
+  Earth:     ['Rock Barrage','Earth Wall','Stone Fist','Earthquake','Boulder Crash'],
+  Lightning: ['Thunder Bolt','Spark Dash','Chain Lightning',"Thunder God's Fist",'Lightning Storm'],
+  Ice:       ['Ice Spike','Blizzard','Frozen Wave','Arctic Blast','Glacier Crush'],
+  Dark:      ['Dark Claw','Shadow Ball','Void Slash','Dark Binding','Darkness Pulse'],
+  Light:     ['Light Beam','Holy Ray','Radiant Slash','Shining Arrow','Divine Judgment'],
+  Arcane:    ['Arcane Surge','Dimensional Rift','Nullification','Arcane Rain','Void Obliteration'],
+  None:      ['Punch','Kick'],
+};
+const GRIMOIRE_RANKS = ['None','3-Leaf','4-Leaf','5-Leaf (Black)','Legendary'];
+const GRIMOIRE_WEIGHTS = [15, 50, 25, 8, 2];
+const QUESTS = [
+  { name:'Defeat the Forest Goblin',  enemy:'Goblin',      ehp:50,  edmg:8,  xp:50,  gold:20,  req:1  },
+  { name:'Hunt the Alpha Wolf',       enemy:'Alpha Wolf',  ehp:120, edmg:18, xp:120, gold:50,  req:3  },
+  { name:'Slay the Cave Troll',       enemy:'Cave Troll',  ehp:200, edmg:28, xp:200, gold:80,  req:6  },
+  { name:'Challenge the Dark Knight', enemy:'Dark Knight', ehp:350, edmg:40, xp:350, gold:130, req:10 },
+  { name:'Face the Ancient Dragon',   enemy:'Dragon',      ehp:600, edmg:65, xp:600, gold:250, req:15 },
+  { name:'Vanquish the Demon Lord',   enemy:'Demon Lord',  ehp:999, edmg:90, xp:999, gold:500, req:20 },
+];
+
+
+// ══════════════════════════════════════════
+//  PLAYER STATE
+// ══════════════════════════════════════════
+let player = null;
+
+function createPlayer(name, race, magic, trait, grimoire) {
+  const r = RACES[race], t = TRAITS[trait];
+  const maxHp   = Math.floor((100 + r.hp)   * t.hp);
+  const maxMana = Math.floor((80  + r.mana)  * t.mana);
+  return {
+    name, race, magic, trait, grimoire,
+    level:1, xp:0, xpNeeded:100, gold:0, mastery:0,
+    maxHp, maxMana, hp:maxHp, mana:maxMana,
+    baseDmg: Math.floor(15 * t.dmg),
+    spins: { magic:3, race:3, trait:3 },
+    spells: [SPELLS[magic][0]],
+    pendingSpin: null, pendingSpinType: null,
+  };
+}
+
+function giveXP(amount) {
+  player.xp += amount;
+  player.mastery += Math.floor(amount / 2);
+  while (player.xp >= player.xpNeeded) {
+    player.xp -= player.xpNeeded;
+    player.level++;
+    player.xpNeeded = Math.floor(player.xpNeeded * 1.4);
+    player.maxHp   += 15;
+    player.maxMana += 10;
+    player.baseDmg += 3;
+    player.hp = player.maxHp;
+    player.mana = player.maxMana;
+    const idx = Math.min(Math.floor(player.level / 5), (SPELLS[player.magic]||['Punch']).length - 1);
+    const ns = (SPELLS[player.magic]||['Punch'])[idx];
+    if (!player.spells.includes(ns)) {
+      player.spells.push(ns);
+      showToast(`✨ New spell: ${ns}!`);
+    }
+    showToast(`⬆ LEVEL UP! Now Level ${player.level}!`);
+  }
+  updateHUD();
+}
+
+function updateHUD() {
+  if (!player) return;
+  document.getElementById('hud-name').textContent = `${player.name}`;
+  document.getElementById('hud-level').textContent = player.level;
+  document.getElementById('hud-xp').textContent = `${player.xp}/${player.xpNeeded}`;
+  document.getElementById('hud-gold').textContent = player.gold;
+  document.getElementById('hud-grimoire').textContent = player.grimoire;
+  const m = MAGIC_TYPES[player.magic];
+  document.getElementById('hud-magic').innerHTML = `<span style="color:${m.color}">${player.magic} Magic</span> · ${player.race} · ${player.trait}`;
+  setBar('bar-hp',   'val-hp',   player.hp,   player.maxHp);
+  setBar('bar-mana', 'val-mana', player.mana, player.maxMana);
+
+  // Update orb glow color
+  orbMat.color.setHex(m.fxColor);
+  orbMat.emissive.setHex(m.fxColor);
+  orbLight.color.setHex(m.fxColor);
+}
+
+function setBar(barId, valId, cur, max) {
+  const pct = Math.max(0, Math.min(100, (cur / max) * 100));
+  document.getElementById(barId).style.width = pct + '%';
+  document.getElementById(valId).textContent = `${cur}/${max}`;
+}
+
+
+// ══════════════════════════════════════════
+//  SCREEN TRANSITIONS
+// ══════════════════════════════════════════
+function showCreate() {
+  hide('title-screen');
+  // Build UI first before showing screen
+  buildCreationUI();
+  show('create-screen');
+}
+
+function startGame() {
+  const name = document.getElementById('char-name').value.trim() || 'Hero';
+  // Always fallback to first option if nothing selected
+  const race    = getSelected('race-options')  || Object.keys(RACES)[0];
+  const magic   = getSelected('magic-options') || Object.keys(MAGIC_TYPES)[0];
+  const trait   = getSelected('trait-options') || Object.keys(TRAITS)[0];
+  const grimoire = weightedRandom(GRIMOIRE_RANKS, GRIMOIRE_WEIGHTS);
+
+  player = createPlayer(name, race, magic, trait, grimoire);
+
+  hide('create-screen');
+  // Force game screen visible with inline style override
+  const gs = document.getElementById('game-screen');
+  gs.classList.remove('hidden');
+  gs.style.opacity = '1';
+  gs.style.pointerEvents = 'all';
+  gs.style.background = 'transparent';
+
+  updateHUD();
+  charGroup.position.x = -5;
+  charGroup.visible = true;
+
+  setTimeout(() => showToast(`☘ Grimoire: ${grimoire} Clover!`), 300);
+}
+
+function show(id) {
+  const el = document.getElementById(id);
+  el.classList.remove('hidden');
+  el.style.opacity = '1';
+  el.style.pointerEvents = 'all';
+}
+function hide(id) {
+  const el = document.getElementById(id);
+  el.classList.add('hidden');
+  el.style.opacity = '0';
+  el.style.pointerEvents = 'none';
+}
+
+function getSelected(gridId) {
+  const btn = document.querySelector(`#${gridId} .opt-btn.selected`);
+  return btn ? btn.dataset.value : null;
+}
+
+
+// ══════════════════════════════════════════
+//  CREATION UI BUILDER
+// ══════════════════════════════════════════
+function buildCreationUI() {
+  buildOptions('race-options', Object.keys(RACES), v => {
+    const r = RACES[v];
+    return `${v}<span class="opt-rarity rarity-${r.rarity}">${r.rarity}</span>`;
+  });
+  buildOptions('magic-options', Object.keys(MAGIC_TYPES), v => {
+    const m = MAGIC_TYPES[v];
+    return `<span style="color:${m.color}">${v}</span>`;
+  });
+  buildOptions('trait-options', Object.keys(TRAITS), v => v);
+}
+
+function buildOptions(containerId, values, labelFn) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = '';
+  values.forEach((v, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn' + (i === 0 ? ' selected' : '');
+    btn.dataset.value = v;
+    btn.innerHTML = labelFn(v);
+    btn.onclick = () => {
+      c.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    };
+    c.appendChild(btn);
+  });
+}
+
+
+// ══════════════════════════════════════════
+//  COMBAT SYSTEM
+// ══════════════════════════════════════════
+let combat = null;
+
+function openQuestMenu() {
+  const available = QUESTS.filter(q => player.level >= q.req);
+  const list = document.getElementById('quest-list');
+  list.innerHTML = '';
+  if (!available.length) {
+    list.innerHTML = '<div style="color:#888;font-size:13px;text-align:center;">No quests available yet. Level up!</div>';
+  } else {
+    available.forEach(q => {
+      const btn = document.createElement('button');
+      btn.className = 'action-btn';
+      btn.style.cssText = 'width:100%;margin-bottom:8px;clip-path:none;font-size:11px;text-align:left;padding:12px 16px;';
+      btn.innerHTML = `<b>${q.name}</b> <span style="color:#888;float:right">Lv.${q.req} | XP: ${q.xp} | 💰${q.gold}</span>`;
+      btn.onclick = () => { closeModal('quest-modal'); startCombat(q); };
+      list.appendChild(btn);
+    });
+  }
+  show('quest-modal');
+}
+
+function startCombat(quest) {
+  combat = {
+    quest,
+    enemyHp: quest.ehp,
+    enemyMaxHp: quest.ehp,
+    active: true,
+  };
+  player.hp   = player.maxHp;
+  player.mana = player.maxMana;
+
+  document.getElementById('combat-title').textContent = `⚔ ${player.name} vs ${quest.enemy}`;
+  document.getElementById('c-pname').textContent = player.name;
+  document.getElementById('c-ename').textContent = quest.enemy;
+  document.getElementById('combat-log').innerHTML = `<p class="log-system">⚔ Battle begins! Face the ${quest.enemy}!</p>`;
+
+  buildSpellGrid();
+  updateCombatBars();
+
+  // Show enemy 3D
+  enemyGroup.visible = true;
+  enemyGroup.position.x = 5;
+  charGroup.position.x = -5;
+  charGroup.visible = true;
+
+  show('combat-overlay');
+}
+
+function buildSpellGrid() {
+  const grid = document.getElementById('spell-grid');
+  grid.innerHTML = '';
+  player.spells.forEach(spell => {
+    const btn = document.createElement('button');
+    btn.className = 'spell-btn';
+    btn.textContent = spell;
+    const cost = MAGIC_TYPES[player.magic].mana;
+    btn.title = `Mana cost: ${cost}`;
+    btn.onclick = () => combatAction('spell', spell);
+    grid.appendChild(btn);
+  });
+}
+
+function combatAction(type, spell = null) {
+  if (!combat || !combat.active) return;
+  const log = document.getElementById('combat-log');
+
+  function addLog(text, cls) {
+    const p = document.createElement('p');
+    p.className = cls;
+    p.innerHTML = text;
+    log.appendChild(p);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  // Player turn
+  let pDmg = 0;
+  if (type === 'flee') {
+    if (Math.random() < 0.45) {
+      addLog('🏃 You fled the battle!', 'log-system');
+      endCombat(false, true);
+      return;
+    } else {
+      addLog('❌ You couldn\'t escape!', 'log-enemy');
+    }
+  } else if (type === 'spell' && spell) {
+    const mCost = MAGIC_TYPES[player.magic].mana;
+    if (player.mana < mCost) {
+      addLog('💧 Not enough mana! Using basic attack.', 'log-system');
+      pDmg = Math.floor(player.baseDmg * (0.8 + Math.random() * 0.2));
+      spawnAttackFX(0xffffff);
+    } else {
+      player.mana -= mCost;
+      pDmg = Math.floor(player.baseDmg * MAGIC_TYPES[player.magic].dmg * (0.85 + Math.random() * 0.3));
+      addLog(`✨ <b>${spell}</b> → ${pDmg} damage!`, 'log-player');
+      spawnAttackFX(MAGIC_TYPES[player.magic].fxColor);
+    }
+  } else {
+    pDmg = Math.floor(player.baseDmg * (0.8 + Math.random() * 0.2));
+    addLog(`🗡 Basic attack → ${pDmg} damage!`, 'log-player');
+    spawnAttackFX(0xdddddd);
+  }
+
+  combat.enemyHp = Math.max(0, combat.enemyHp - pDmg);
+  updateCombatBars();
+
+  if (combat.enemyHp <= 0) { endCombat(true); return; }
+
+  // Enemy turn (after short delay)
+  setTimeout(() => {
+    if (!combat || !combat.active) return;
+    const eDmg = Math.floor(combat.quest.edmg * (0.8 + Math.random() * 0.4));
+    player.hp = Math.max(0, player.hp - eDmg);
+    addLog(`👹 ${combat.quest.enemy} attacks → ${eDmg} damage!`, 'log-enemy');
+    spawnAttackFX(0xe74c3c);
+    updateCombatBars();
+    updateHUD();
+    if (player.hp <= 0) endCombat(false);
+  }, 400);
+}
+
+function updateCombatBars() {
+  setBar('c-php',   'c-php-val',   player.hp,        player.maxHp);
+  setBar('c-pmana', 'c-pmana-val', player.mana,      player.maxMana);
+  setBar('c-ehp',   'c-ehp-val',   combat.enemyHp,   combat.enemyMaxHp);
+}
+
+function endCombat(won, fled = false) {
+  if (combat) combat.active = false;
+  const log = document.getElementById('combat-log');
+
+  setTimeout(() => {
+    if (won) {
+      const p = document.createElement('p');
+      p.className = 'log-system';
+      p.textContent = `🏆 Victory! ${combat.quest.enemy} defeated!`;
+      log.appendChild(p);
+      log.scrollTop = log.scrollHeight;
+      giveXP(combat.quest.xp);
+      player.gold += combat.quest.gold;
+      showToast(`+${combat.quest.xp} XP · +${combat.quest.gold} Gold`);
+    } else if (!fled) {
+      const p = document.createElement('p');
+      p.className = 'log-enemy';
+      p.textContent = '💀 You were defeated...';
+      log.appendChild(p);
+      player.hp = 1;
+    }
+    updateHUD();
+
+    setTimeout(() => {
+      hide('combat-overlay');
+      enemyGroup.visible = false;
+      charGroup.position.x = 0;
+      combat = null;
+    }, 1600);
+  }, 300);
+}
+
+
+// ══════════════════════════════════════════
+//  SPIN SYSTEM
+// ══════════════════════════════════════════
+function openSpinMenu() {
+  document.getElementById('s-magic-count').textContent = player.spins.magic;
+  document.getElementById('s-race-count').textContent  = player.spins.race;
+  document.getElementById('s-trait-count').textContent = player.spins.trait;
+  document.getElementById('spin-result').textContent = '—';
+  document.getElementById('spin-keep-row').style.display = 'none';
+  player.pendingSpin = null;
+  show('spin-modal');
+}
+
+function doSpin(type) {
+  if (player.spins[type] <= 0) { showToast('No spins left!'); return; }
+  player.spins[type]--;
+
+  let result;
+  if (type === 'magic') {
+    result = Object.keys(MAGIC_TYPES)[Math.floor(Math.random() * Object.keys(MAGIC_TYPES).length)];
+    const c = MAGIC_TYPES[result].color;
+    document.getElementById('spin-result').innerHTML = `<span style="color:${c}">${result} Magic</span>`;
+  } else if (type === 'race') {
+    result = weightedRandom(Object.keys(RACES), Object.values(RACES).map(r => r.w));
+    document.getElementById('spin-result').innerHTML = `${result} <small style="color:var(--gold);font-size:14px;">(${RACES[result].rarity})</small>`;
+  } else {
+    result = Object.keys(TRAITS)[Math.floor(Math.random() * Object.keys(TRAITS).length)];
+    document.getElementById('spin-result').textContent = result;
+  }
+
+  player.pendingSpin = result;
+  player.pendingSpinType = type;
+  document.getElementById('spin-keep-row').style.display = 'flex';
+  document.getElementById('s-magic-count').textContent = player.spins.magic;
+  document.getElementById('s-race-count').textContent  = player.spins.race;
+  document.getElementById('s-trait-count').textContent = player.spins.trait;
+}
+
+function keepSpin() {
+  const { pendingSpin: val, pendingSpinType: type } = player;
+  if (!val) return;
+  if (type === 'magic') {
+    player.magic = val;
+    player.spells = [SPELLS[val][0]];
+    showToast(`Magic → ${val}!`);
+    updateHUD();
+  } else if (type === 'race') {
+    player.race = val;
+    const r = RACES[val], t = TRAITS[player.trait];
+    player.maxHp   = Math.floor((100 + r.hp)   * t.hp);
+    player.maxMana = Math.floor((80  + r.mana)  * t.mana);
+    player.hp = player.maxHp; player.mana = player.maxMana;
+    showToast(`Race → ${val}!`);
+    updateHUD();
+  } else {
+    player.trait = val;
+    showToast(`Trait → ${val}!`);
+  }
+  player.pendingSpin = null;
+  document.getElementById('spin-keep-row').style.display = 'none';
+}
+
+function discardSpin() {
+  player.pendingSpin = null;
+  document.getElementById('spin-result').textContent = '—';
+  document.getElementById('spin-keep-row').style.display = 'none';
+}
+
+
+// ══════════════════════════════════════════
+//  REST & SPELLS
+// ══════════════════════════════════════════
+function restPlayer() {
+  if (player.gold >= 10) {
+    player.gold -= 10;
+    player.hp   = player.maxHp;
+    player.mana = player.maxMana;
+    showToast('🛌 Fully rested! (-10 Gold)');
+  } else {
+    player.hp   = Math.min(player.hp   + Math.floor(player.maxHp   * 0.3), player.maxHp);
+    player.mana = Math.min(player.mana + Math.floor(player.maxMana * 0.3), player.maxMana);
+    showToast('🌿 Partially rested. (Need 10 Gold for full rest)');
+  }
+  updateHUD();
+}
+
+function openSpellsModal() {
+  const m = MAGIC_TYPES[player.magic];
+  const list = document.getElementById('spells-list');
+  list.innerHTML = player.spells.map(s =>
+    `<div>⚡ <span style="color:${m.color}">${s}</span></div>`
+  ).join('');
+  show('spells-modal');
+}
+
+
+// ══════════════════════════════════════════
+//  UTILITIES
+// ══════════════════════════════════════════
+function closeModal(id) { hide(id); }
+
+function weightedRandom(items, weights) {
+  const total = weights.reduce((a, b) => a + b, 0);
+  let rand = Math.random() * total;
+  for (let i = 0; i < items.length; i++) {
+    rand -= weights[i];
+    if (rand <= 0) return items[i];
+  }
+  return items[items.length - 1];
+}
+
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
